@@ -111,6 +111,12 @@ renderer.setClearColor(0xffffff, 1);
 const mouse = new THREE.Vector2(0.5, 0.5);
 let mouseOver = false;
 
+// -------------------------------------------------------
+
+let lastMouse = new THREE.Vector2(0.5, 0.5);
+let mouseSpeed = 0;
+// -------------------------------------------------------
+
 // Texture Loader
 const loader = new THREE.TextureLoader();
 
@@ -169,12 +175,46 @@ loader.load("/Logo_Dark.png", (texture) => {
   // });
 
   // Mouse move
+  // window.addEventListener("mousemove", (e) => {
+  //   const rect = canvas.getBoundingClientRect();
+  //   const x = (e.clientX - rect.left) / rect.width;
+  //   const y = 1 - (e.clientY - rect.top) / rect.height; // flip Y
+
+  //   // Check if mouse is over the image
+  //   const imgLeft =
+  //     (0.5 - (0.5 * mesh.scale.x) / camera.position.z) * window.innerWidth;
+  //   const imgRight =
+  //     (0.5 + (0.5 * mesh.scale.x) / camera.position.z) * window.innerWidth;
+  //   const imgTop =
+  //     (0.5 - (0.5 * mesh.scale.y) / camera.position.z) * window.innerHeight;
+  //   const imgBottom =
+  //     (0.5 + (0.5 * mesh.scale.y) / camera.position.z) * window.innerHeight;
+
+  //   // Use bounding box in pixels
+  //   const mouseX = e.clientX;
+  //   const mouseY = e.clientY;
+
+  //   mouseOver =
+  //     mouseX >= imgLeft &&
+  //     mouseX <= imgRight &&
+  //     mouseY >= imgTop &&
+  //     mouseY <= imgBottom;
+
+  //   if (mouseOver) {
+  //     mouse.set(x, y);
+
+  //     // trigger ripple
+  //   material.uniforms.uRippleOrigin.value.set(x, y);
+  //   material.uniforms.uRippleStart.value = clock.getElapsedTime();
+  //   }
+  // });
+   // Mouse move detection
   window.addEventListener("mousemove", (e) => {
     const rect = canvas.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
-    const y = 1 - (e.clientY - rect.top) / rect.height; // flip Y
+    const y = 1 - (e.clientY - rect.top) / rect.height;
 
-    // Check if mouse is over the image
+    // get bounding box in pixels
     const imgLeft =
       (0.5 - (0.5 * mesh.scale.x) / camera.position.z) * window.innerWidth;
     const imgRight =
@@ -184,7 +224,6 @@ loader.load("/Logo_Dark.png", (texture) => {
     const imgBottom =
       (0.5 + (0.5 * mesh.scale.y) / camera.position.z) * window.innerHeight;
 
-    // Use bounding box in pixels
     const mouseX = e.clientX;
     const mouseY = e.clientY;
 
@@ -195,13 +234,25 @@ loader.load("/Logo_Dark.png", (texture) => {
       mouseY <= imgBottom;
 
     if (mouseOver) {
+      // movement speed
+      const dx = x - lastMouse.x;
+      const dy = y - lastMouse.y;
+      mouseSpeed = Math.sqrt(dx * dx + dy * dy);
+
+      lastMouse.set(x, y);
+
       mouse.set(x, y);
 
-      // trigger ripple
-    material.uniforms.uRippleOrigin.value.set(x, y);
-    material.uniforms.uRippleStart.value = clock.getElapsedTime();
+      // Ripple trigger only when moving
+      if (mouseSpeed > 0.001) {
+        material.uniforms.uRippleOrigin.value.set(x, y);
+        material.uniforms.uRippleStart.value = clock.getElapsedTime();
+      }
+    } else {
+      mouseSpeed = 0;
     }
   });
+
 
   window.addEventListener("mouseleave", () => {
     mouseOver = false;
@@ -222,10 +273,21 @@ loader.load("/Logo_Dark.png", (texture) => {
     //   : THREE.MathUtils.lerp(material.uniforms.uStrength.value, 0.0, 0.1);
 
     // Smoothly animate strength
+    // material.uniforms.uStrength.value = THREE.MathUtils.lerp(
+    //   material.uniforms.uStrength.value,
+    //   mouseOver ? 1.0 : 0.0, // only 1 if mouse is over image
+    //   0.1
+    // );
+
+     // bulge only when mouse moves
+    const targetStrength = mouseOver
+      ? Math.min(mouseSpeed * 35.0, 1.0)
+      : 0.0;
+
     material.uniforms.uStrength.value = THREE.MathUtils.lerp(
       material.uniforms.uStrength.value,
-      mouseOver ? 1.0 : 0.0, // only 1 if mouse is over image
-      0.1
+      targetStrength,
+      0.15
     );
 
     
