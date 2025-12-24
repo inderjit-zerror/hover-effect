@@ -128,6 +128,8 @@ loader.load("/Logo_Dark.png", (texture) => {
       uResolution: {
         value: new THREE.Vector2(window.innerWidth, window.innerHeight),
       },
+      uRippleOrigin: { value: new THREE.Vector2(0.5, 0.5) },
+      uRippleStart: { value: -1.0 }, // start in the past
     },
     transparent: true,
   });
@@ -194,6 +196,10 @@ loader.load("/Logo_Dark.png", (texture) => {
 
     if (mouseOver) {
       mouse.set(x, y);
+
+      // trigger ripple
+    material.uniforms.uRippleOrigin.value.set(x, y);
+    material.uniforms.uRippleStart.value = clock.getElapsedTime();
     }
   });
 
@@ -221,6 +227,8 @@ loader.load("/Logo_Dark.png", (texture) => {
       mouseOver ? 1.0 : 0.0, // only 1 if mouse is over image
       0.1
     );
+
+    
     renderer.render(scene, camera);
   }
   animate();

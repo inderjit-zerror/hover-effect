@@ -38,7 +38,8 @@ float rippleAge = uTime - uRippleStart;
 if (rippleAge > 0.0 && rippleAge < 1.0) {
 float rippleRadius = rippleAge * 0.4;
 float d = length((vUv - uRippleOrigin) * aspect);
-float wave = sin(35.0 * (d - rippleRadius)) * 0.02;
+// float wave = sin(35.0 * (d - rippleRadius)) * 0.02;
+float wave = sin(20.0 * (d - rippleRadius) - uTime * 5.0) * 0.03 ;
 float fade = 1.0 - smoothstep(0.0, 1.0, rippleAge);
 float mask = smoothstep(rippleRadius + 0.1, rippleRadius, d);
 distorted += normalize(dir) * wave * mask * fade / aspect;
